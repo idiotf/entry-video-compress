@@ -35,13 +35,25 @@ async function joinFrames({ col, row, blankRow, minusRow, frames, tar, width, he
   return promise
 }
 
-async function extract(ffmpeg: FFmpeg, tar: Tar, width: number, height: number, chunks: number, name: string, fps?: number) {
+async function extract({ ffmpeg, tar, width, height, chunks, name, fps, frameCallback, soundCallback }: {
+  ffmpeg: FFmpeg
+  tar: Tar
+  width: number
+  height: number
+  chunks: number
+  name: string
+  fps?: number
+  frameCallback?(): unknown
+  soundCallback?(): unknown
+}) {
   const [ frameData, soundData ] = await Promise.all([
     ffmpeg.exec(['-i', name, '-s', `${width}x${height}`, ...(fps ? ['-r', fps.toString()] : []), 'f/%d.png'])
       .then(() => ffmpeg.listDir('f'))
-      .then(files => Promise.all(files.filter(v => !v.isDir).map(v => ffmpeg.readFile('f/' + v.name)))),
+      .then(files => Promise.all(files.filter(v => !v.isDir).map(v => ffmpeg.readFile('f/' + v.name))))
+      .finally(frameCallback),
     ffmpeg.exec(['-i', name, 's.mp3'])
-      .then(code => code ? null : ffmpeg.readFile('s.mp3')),
+      .then(code => code ? null : ffmpeg.readFile('s.mp3'))
+      .finally(soundCallback),
   ])
   ffmpeg.terminate()
 
@@ -92,7 +104,6 @@ const target = new ParentTarget(self)
 target.addEventListener('video', async ({ data: { video, width, height, chunkLength = 1, fps, name } }) => {
   const tar = new Tar
 
-  console.log('Loading...')
   // Extract frames and a sound with FFmpeg
   const ffmpeg = new FFmpeg
   await ffmpeg.load()
@@ -102,13 +113,13 @@ target.addEventListener('video', async ({ data: { video, width, height, chunkLen
     ffmpeg.createDir('f'),
   ])
 
-  const progressCallback = ({ progress }: ProgressEvent) => console.log(`Progressing... ${(progress * 100).toFixed(3)}%`)
+  const progressCallback = ({ progress }: ProgressEvent) => target.postMessage('progress', progress)
   ffmpeg.on('progress', progressCallback)
   const [ { chunks, soundName, soundPath, col, frames }, duration ] = await Promise.all([
-    extract(ffmpeg, tar, width, height, chunkLength, name, fps),
+    extract({ ffmpeg, tar, width, height, chunks: chunkLength, name, fps, frameCallback: () => target.postMessage('status', 'sound') }),
     ffmpeg.ffprobe(['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', name, '-o', 'd.txt'])
       .then(() => ffmpeg.readFile('d.txt', 'utf8'))
-      .then(data => parseFloat(typeof data == 'object' ? decoder.decode(data) : data))
+      .then(data => parseFloat(typeof data == 'object' ? decoder.decode(data) : data)),
   ])
   ffmpeg.off('progress', progressCallback)
 

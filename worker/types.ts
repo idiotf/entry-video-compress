@@ -10,6 +10,8 @@ export interface ParentMessages {
 }
 
 export interface WorkerMessages {
+  progress: number
+  status: 'sound'
   finalize: string
 }
 
