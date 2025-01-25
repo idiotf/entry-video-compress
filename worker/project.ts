@@ -141,111 +141,74 @@ export default function createProject({ name, chunks, soundPath, soundName, col,
           type: 'when_run_button_click',
           params: [null],
           statements: [],
-        }),
-        new Script({
-          type: 'wait_until_true',
-          params: [new Script({
-            type: 'boolean_basic_operator',
-            params: [new Script({
-              type: 'get_project_timer_value',
-              params: [null, null],
-              statements: [],
-            }), 'GREATER_OR_EQUAL', new Script({
-              type: 'number',
-              params: [Math.min((chunks[i - 1]?.row || 0) * col * duration / frames, duration)],
-              statements: [],
-            })],
-            statements: [],
-          }), null],
-          statements: [],
         }), new Script({
           type: 'show',
           params: [null],
           statements: [],
         }), new Script({
-          type: 'repeat_while_true',
-          params: [new Script({
-            type: 'boolean_basic_operator',
-            params: [new Script({
-              type: 'calc_basic',
-              params: [new Script({
-                type: 'get_project_timer_value',
-                params: [null, null],
-                statements: [],
-              }), 'MINUS', new Script({
-                type: 'number',
-                params: [(chunks[i - 1]?.row || 0) * col * duration / frames],
-                statements: [],
-              })],
-              statements: [],
-              }), 'GREATER_OR_EQUAL', new Script({
-                type: 'number',
-                params: [chunk.row * col * duration / frames],
-                statements: [],
-              })],
-              statements: [],
-            }), 'until', null],
-            statements: [[new Script({
-              type: 'set_variable',
-              params: ['yri3', new Script({
-                type: 'calc_operation',
-                params: [null, new Script({
+          type: 'repeat_inf',
+          params: [null, null],
+          statements: [[new Script({
+            type: 'set_variable',
+            params: ['yri3', new Script({
+              type: 'calc_operation',
+              params: [null, new Script({
+                type: 'calc_basic',
+                params: [new Script({
                   type: 'calc_basic',
                   params: [new Script({
                     type: 'calc_basic',
                     params: [new Script({
-                      type: 'calc_basic',
-                      params: [new Script({
-                        type: 'get_project_timer_value',
-                        params: [null, null],
-                        statements: [],
-                      }), 'MINUS', new Script({
-                        type: 'number',
-                        params: [(chunks[i - 1]?.row || 0) * col * duration / frames],
-                        statements: [],
-                      })],
+                      type: 'get_project_timer_value',
+                      params: [null, null],
                       statements: [],
-                    }), 'MULTI', new Script({
-                      type: 'get_variable',
-                      params: ['qro9', null],
+                    }), 'MINUS', new Script({
+                      type: 'number',
+                      params: [(chunks[i - 1]?.row || 0) * col * duration / frames],
                       statements: [],
                     })],
                     statements: [],
-                  }), 'DIVIDE', new Script({
+                  }), 'MULTI', new Script({
                     type: 'get_variable',
-                    params: ['49r4', null],
+                    params: ['qro9', null],
                     statements: [],
                   })],
                   statements: [],
-                }), null, 'floor'],
-                statements: [],
-              }), null],
-              statements: [],
-            }), new Script({
-              type: 'locate_xy',
-              params: [new Script({
-                type: 'calc_basic',
-                params: [new Script({
-                  type: 'number',
-                  params: [-480],
-                  statements: [],
-                }), 'MULTI', new Script({
-                  type: 'quotient_and_mod',
-                  params: [null, new Script({
-                    type: 'get_variable',
-                    params: ['yri3', null],
-                    statements: [],
-                  }), null, new Script({
-                    type: 'get_variable',
-                    params: ['voni', null],
-                    statements: [],
-                  }), null, 'MOD'],
+                }), 'DIVIDE', new Script({
+                  type: 'get_variable',
+                  params: ['49r4', null],
                   statements: [],
                 })],
                 statements: [],
-              }), new Script({
-                type: 'calc_basic',
-                params: [new Script({
+              }), null, 'floor'],
+              statements: [],
+            }), null],
+            statements: [],
+          }), new Script({
+            type: 'locate_xy',
+            params: [new Script({
+              type: 'calc_basic',
+              params: [new Script({
+                type: 'number',
+                params: [-480],
+                statements: [],
+              }), 'MULTI', new Script({
+                type: 'quotient_and_mod',
+                params: [null, new Script({
+                  type: 'get_variable',
+                  params: ['yri3', null],
+                  statements: [],
+                }), null, new Script({
+                  type: 'get_variable',
+                  params: ['voni', null],
+                  statements: [],
+                }), null, 'MOD'],
+                statements: [],
+              })],
+              statements: [],
+            }), new Script({
+              type: 'calc_basic',
+              params: [new Script({
                 type: 'number',
                 params: [270],
                 statements: [],
@@ -265,11 +228,7 @@ export default function createProject({ name, chunks, soundPath, soundName, col,
             statements: [],
           }), null],
           statements: [],
-        })]],
-        }), new Script({
-          type: 'hide',
-          params: [null],
-          statements: [],
+          })]],
         }),
       ]],
       picture: chunk,

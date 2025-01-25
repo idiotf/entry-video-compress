@@ -14,6 +14,7 @@ export default function Button() {
         video: new Uint8Array(data),
         width: 640,
         height: 360,
+        chunkLength: 20,
         name: file.name,
       }, [ data ])
 
@@ -23,6 +24,7 @@ export default function Button() {
         anchor.download = file.name.replace(/(\..*)*$/, '.ent')
         anchor.click()
         URL.revokeObjectURL(data)
+        target.worker.terminate()
       })
     }
   }

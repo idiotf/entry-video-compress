@@ -3,6 +3,7 @@ export interface ParentMessages {
     video: Uint8Array<ArrayBuffer>
     width: number
     height: number
+    chunkLength?: number
     fps?: number
     name: string
   }

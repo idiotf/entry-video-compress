@@ -6,7 +6,7 @@ import { FFmpeg, ProgressEvent } from '@ffmpeg/ffmpeg'
 
 async function joinFrames({ col, row, blankRow, minusRow, frames, tar, width, height }: { col: number, row: number, blankRow: number, minusRow: number, frames: ImageBitmap[], tar: Tar, width: number, height: number }) {
   const canvas = new OffscreenCanvas(width * col, height * minusRow)
-  const context = canvas.getContext('2d', { alpha: false })
+  const context = canvas.getContext('2d')
   if (!context) throw new TypeError('Cannot use Canvas2D')
 
   frames.slice(col * (row - blankRow), col * (row - blankRow + minusRow)).forEach((bitmap, i) => {
@@ -35,7 +35,7 @@ async function joinFrames({ col, row, blankRow, minusRow, frames, tar, width, he
   return promise
 }
 
-async function extract(ffmpeg: FFmpeg, tar: Tar, width: number, height: number, name: string, fps?: number) {
+async function extract(ffmpeg: FFmpeg, tar: Tar, width: number, height: number, chunks: number, name: string, fps?: number) {
   const [ frameData, soundData ] = await Promise.all([
     ffmpeg.exec(['-i', name, '-s', `${width}x${height}`, ...(fps ? ['-r', fps.toString()] : []), 'f/%d.png'])
       .then(() => ffmpeg.listDir('f'))
@@ -54,7 +54,6 @@ async function extract(ffmpeg: FFmpeg, tar: Tar, width: number, height: number, 
 
   if (sound) tar.append(soundPath, new Uint8Array(sound))
 
-  const chunks = Math.ceil(frames.length / 100)
   const col = Math.round(Math.sqrt(frames.length / chunks))
   const row = Math.ceil(frames.length / col)
 
@@ -90,7 +89,7 @@ async function extract(ffmpeg: FFmpeg, tar: Tar, width: number, height: number, 
 const encoder = new TextEncoder
 const decoder = new TextDecoder
 const target = new ParentTarget(self)
-target.addEventListener('video', async ({ data: { video, width, height, fps, name } }) => {
+target.addEventListener('video', async ({ data: { video, width, height, chunkLength = 1, fps, name } }) => {
   const tar = new Tar
 
   console.log('Loading...')
@@ -106,7 +105,7 @@ target.addEventListener('video', async ({ data: { video, width, height, fps, nam
   const progressCallback = ({ progress }: ProgressEvent) => console.log(`Progressing... ${(progress * 100).toFixed(3)}%`)
   ffmpeg.on('progress', progressCallback)
   const [ { chunks, soundName, soundPath, col, frames }, duration ] = await Promise.all([
-    extract(ffmpeg, tar, width, height, name, fps),
+    extract(ffmpeg, tar, width, height, chunkLength, name, fps),
     ffmpeg.ffprobe(['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', name, '-o', 'd.txt'])
       .then(() => ffmpeg.readFile('d.txt', 'utf8'))
       .then(data => parseFloat(typeof data == 'object' ? decoder.decode(data) : data))
