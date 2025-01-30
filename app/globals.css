@@ -1,7 +1,9 @@
-@import 'tailwindcss';
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss' layer(base);
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
 
 :root {
   --background: #ffffff;
@@ -13,6 +15,39 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+}
+
+progress::-webkit-progress-bar {
+  border-radius: calc(var(--spacing)*1);
+  background-color: var(--color-neutral-300);
+}
+
+progress[data-state=error]::-webkit-progress-bar {
+  background-color: var(--color-red-400);
+}
+
+progress[data-state=done]::-webkit-progress-value {
+  background-color: var(--color-green-400);
+}
+
+progress::-webkit-progress-value {
+  border-radius: calc(var(--spacing)*1);
+  background-color: var(--color-blue-500);
+  transition: 0.5s linear;
+}
+
+progress::-moz-progress-bar {
+  border-radius: calc(var(--spacing)*1);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
 }
 
 body {

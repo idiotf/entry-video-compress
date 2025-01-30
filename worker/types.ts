@@ -3,15 +3,16 @@ export interface ParentMessages {
     video: Uint8Array<ArrayBuffer>
     width: number
     height: number
-    chunkLength?: number
+    framesPerChunk: number
     fps?: number
     name: string
+    isOneObject: boolean
   }
 }
 
 export interface WorkerMessages {
+  status: 'extracting-sound'
   progress: number
-  status: 'sound'
   finalize: string
 }
 
