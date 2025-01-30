@@ -168,6 +168,8 @@ async function extract({ ffmpeg, video, tar, width, height, framesPerChunk, name
   }
 }
 
+// eslint-disable-next-line no-var
+declare var self: WorkerGlobalScope & typeof globalThis
 const encoder = new TextEncoder
 const decoder = new TextDecoder
 const target = new ParentTarget(self)
