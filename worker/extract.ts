@@ -125,7 +125,7 @@ async function extract({ ffmpeg, video, tar, width, height, framesPerChunk, name
       .then(v => typeof v == 'object' ? v : encoder.encode(v))
       .finally(callback),
     ffmpeg.createDir('f')
-      .then(() => ffmpeg.exec(['-i', name, '-s', `${width}x${height}`, ...(fps ? ['-r', fps.toString()] : []), '-vf', `pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2:black`, 'f/%d.png']))
+      .then(() => ffmpeg.exec(['-i', name, '-s', `${width}x${height}`, ...(fps ? ['-r', fps.toString()] : []), 'f/%d.png']))
       .then(() => ffmpeg.listDir('f'))
       .then(files => files.filter(file => !file.isDir).map(v => ffmpeg.readFile('f/' + v.name).then(v => createImageBitmap(new Blob([ typeof v == 'object' ? v : encoder.encode(v) ]))))),
   ])
