@@ -169,8 +169,20 @@ const createObject = ({ name, chunks, soundPath, soundName, col, duration, frame
     }), null],
     statements: [],
   }), new Script({
-    type: 'repeat_inf',
-    params: [null, null],
+    type: 'repeat_while_true',
+    params: [new Script({
+      type: 'boolean_basic_operator',
+      params: [new Script({
+        type: 'get_project_timer_value',
+        params: [null, null],
+        statements: [],
+      }), 'GREATER_OR_EQUAL', new Script({
+        type: 'get_variable',
+        params: ['49r4', null],
+        statements: [],
+      })],
+      statements: [],
+    }), 'until', null],
     statements: [[new Script({
       type: 'change_to_some_shape',
       params: [new Script({
@@ -208,6 +220,10 @@ const createObject = ({ name, chunks, soundPath, soundName, col, duration, frame
       })],
       statements: [],
     })]],
+  }), new Script({
+    type: 'hide',
+    params: [null],
+    statements: [],
   })]],
   pictures: chunks.map(({ path, name, width, height }) => ({ path, name, width, height })), // Remove the row property
   sounds: soundPath && soundName ? [{
