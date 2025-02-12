@@ -136,7 +136,7 @@ async function extract({ ffmpeg, video, tar, width, height, framesPerChunk, name
   if (sound) tar.append(soundPath, sound)
 
   const chunks = Math.ceil(frames.length / framesPerChunk)
-  const col = Math.round(Math.sqrt(framesPerChunk))
+  const col = Math.round(Math.sqrt(frames.length / chunks))
   const row = Math.ceil(frames.length / col)
 
   // Join frames to canvases
