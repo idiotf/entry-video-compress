@@ -3,7 +3,7 @@ import { Noto_Sans_KR } from 'next/font/google'
 import './globals.css'
 
 const notoSansKR = Noto_Sans_KR({
-  subsets: ['cyrillic'],
+  subsets: [],
 })
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { readonly children: React.ReactNode }) {
   return (
     <html lang='en'>
-      <body className={`${notoSansKR.className} antialiased`}>
+      <body className={`${notoSansKR.className} antialiased bg-[#ffffff] text-[#171717] dark:bg-[#0a0a0a] dark:text-[#ededed]`}>
         {children}
       </body>
     </html>

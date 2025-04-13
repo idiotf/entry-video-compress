@@ -1,4 +1,4 @@
-@import 'tailwindcss' layer(base);
+@import 'tailwindcss';
 
 @theme {
   --color-background: var(--background);
@@ -22,11 +22,11 @@ progress::-webkit-progress-bar {
   background-color: var(--color-neutral-300);
 }
 
-progress[data-state=error]::-webkit-progress-bar {
+progress[data-step=error]::-webkit-progress-bar {
   background-color: var(--color-red-400);
 }
 
-progress[data-state=done]::-webkit-progress-value {
+progress[data-step=done]::-webkit-progress-value {
   background-color: var(--color-green-400);
 }
 
@@ -47,11 +47,10 @@ input::-webkit-inner-spin-button {
 }
 
 input[type='number'] {
-  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
 }

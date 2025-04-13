@@ -1,21 +1,24 @@
 export interface ParentMessages {
   video: {
-    video: Uint8Array<ArrayBuffer>
+    file: File
     width: number
     height: number
-    framesPerChunk: number
-    fps?: number
-    name: string
-    isOneObject: boolean
+    frameHorizontal: number
+    frameVertical: number
+    framerate?: number
   }
 }
 
 export interface WorkerMessages {
-  status: 'extracting-sound'
+  step: Step
   progress: number
-  finalize: string
+  done: string
+  error: string
 }
 
+export type Step = 'config' | 'extract' | 'generating' | 'done' | 'error'
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface WorkerTarget extends EventTarget {
   addEventListener<K extends keyof WorkerMessages>(type: K, listener: (this: WorkerTarget, ev: MessageEvent<WorkerMessages[K]>) => any, options?: boolean | AddEventListenerOptions): void // eslint-disable-line @typescript-eslint/no-explicit-any
   addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void
@@ -27,7 +30,7 @@ export interface WorkerTarget extends EventTarget {
 export class WorkerTarget extends EventTarget {
   constructor(public readonly worker: Worker) {
     super()
-    worker.addEventListener('message', <K extends keyof WorkerMessages>({ data: [ type, data ] }: { data: [ K, WorkerMessages[K] ] }) => {
+    worker.addEventListener('message', <K extends keyof WorkerMessages>({ data: [ type, data ] }: MessageEvent<[ K, WorkerMessages[K] ]>) => {
       this.dispatchEvent(new MessageEvent(type, { data }))
     })
   }
@@ -39,19 +42,17 @@ export class WorkerTarget extends EventTarget {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface ParentTarget extends EventTarget {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  addEventListener<K extends keyof ParentMessages>(type: K, listener: (this: ParentTarget, ev: MessageEvent<ParentMessages[K]>) => any, options?: boolean | AddEventListenerOptions): void
+  addEventListener<K extends keyof ParentMessages>(type: K, listener: (this: ParentTarget, ev: MessageEvent<ParentMessages[K]>) => any, options?: boolean | AddEventListenerOptions): void // eslint-disable-line @typescript-eslint/no-explicit-any
   addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  removeEventListener<K extends keyof ParentMessages>(type: K, listener: (this: ParentTarget, ev: MessageEvent<ParentMessages[K]>) => any, options?: boolean | EventListenerOptions): void
+  removeEventListener<K extends keyof ParentMessages>(type: K, listener: (this: ParentTarget, ev: MessageEvent<ParentMessages[K]>) => any, options?: boolean | EventListenerOptions): void // eslint-disable-line @typescript-eslint/no-explicit-any
   removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export class ParentTarget extends EventTarget {
-  constructor(public readonly target: DedicatedWorkerGlobalScope) {
+  constructor(public readonly target: WorkerGlobalScope & typeof globalThis) {
     super()
     target.addEventListener('message', <K extends keyof ParentMessages>({ data: [ type, data ] }: MessageEvent<[ K, ParentMessages[K] ]>) => {
       this.dispatchEvent(new MessageEvent(type, { data }))

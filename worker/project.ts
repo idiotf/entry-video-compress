@@ -1,31 +1,12 @@
 import generateHash from './hash'
 
-export interface Chunk {
-  path: string
-  name: string
-  width: number
-  height: number
-  row: number
-}
-
-export interface ProjectInit {
-  name: string
-  chunks: Chunk[],
-  soundPath?: string
-  soundName?: string
-  col: number
-  frames: number
-  duration: number
-  isOneObject: boolean
-}
-
 class Object {
   id = generateHash(4)
   name
   script
   objectType = 'sprite'
   rotateMethod = 'free'
-  scene = '7dwq'
+  scene = '7dwq' // 장면 1
   sprite
   selectedPictureId
   lock = false
@@ -55,6 +36,7 @@ class Object {
       id: string
       duration: number
       path: string
+      hash: string
       name: string
     }[]
   }) {
@@ -91,12 +73,20 @@ class Object {
         ext: '.mp3',
         id: sound.id,
         fileurl: sound.path,
-        filename: sound.name,
-        name,
+        filename: sound.hash,
+        name: sound.name,
       })),
     }
     this.selectedPictureId = this.sprite.pictures[selectedPicture].id
   }
+}
+
+interface ScriptInit {
+  type: string
+  params?: (Script | string | number | null)[]
+  statements?: Script[][]
+  x?: number
+  y?: number
 }
 
 class Script {
@@ -114,19 +104,16 @@ class Script {
   assemble = true
   extensions = []
 
-  constructor({
-    type,
-    params,
-    statements,
-    x = 0,
-    y = 0,
-  }: {
-    type: string
-    params: (Script | string | number | null)[]
-    statements: Script[][]
-    x?: number
-    y?: number
-  }) {
+  constructor(type: string, params?: (Script | string | number | null)[], statements?: Script[][])
+  constructor(init: ScriptInit, params?: (Script | string | number | null)[], statements?: Script[][])
+  constructor(init: string | ScriptInit, initParams = [], initStatements = []) {
+    const {
+      type,
+      params = initParams,
+      statements = initStatements,
+      x = 0,
+      y = 0,
+    } = typeof init == 'string' ? { type: init } : init
     this.type = type
     this.params = params
     this.statements = statements
@@ -135,293 +122,66 @@ class Script {
   }
 }
 
-const createObject = ({ name, chunks, soundPath, soundName, col, duration, frames, isOneObject }: ProjectInit) => isOneObject ? [new Object({
-  name,
-  scaleX: 480 / chunks[0].width,
-  scaleY: 270 / chunks[0].height,
-  script: [[new Script({
-    type: 'when_run_button_click',
-    params: [null],
-    statements: [],
-  }), new Script({
-    type: 'start_scene',
-    params: ['7dwq', null],
-    statements: [],
-  })], [new Script({
-    type: 'when_scene_start',
-    params: [null],
-    statements: [],
-    y: 76,
-  }), new Script({
-    type: 'show',
-    params: [null],
-    statements: [],
-  }), new Script({
-    type: 'choose_project_timer_action',
-    params: [null, 'START', null, null],
-    statements: [],
-  }), new Script({
-    type: 'sound_something_with_block',
-    params: [new Script({
-      type: 'number',
-      params: [1],
-      statements: [],
-    }), null],
-    statements: [],
-  }), new Script({
-    type: 'repeat_while_true',
-    params: [new Script({
-      type: 'boolean_basic_operator',
-      params: [new Script({
-        type: 'get_project_timer_value',
-        params: [null, null],
-        statements: [],
-      }), 'GREATER_OR_EQUAL', new Script({
-        type: 'get_variable',
-        params: ['49r4', null],
-        statements: [],
-      })],
-      statements: [],
-    }), 'until', null],
-    statements: [[new Script({
-      type: 'change_to_some_shape',
-      params: [new Script({
-        type: 'calc_basic',
-        params: [new Script({
-          type: 'calc_operation',
-          params: [null, new Script({
-            type: 'calc_basic',
-            params: [new Script({
-              type: 'calc_basic',
-              params: [new Script({
-                type: 'get_project_timer_value',
-                params: [null, null],
-                statements: [],
-              }), 'MULTI', new Script({
-                type: 'get_variable',
-                params: ['qro9', null],
-                statements: [],
-              })],
-              statements: [],
-            }), 'DIVIDE', new Script({
-              type: 'get_variable',
-              params: ['49r4', null],
-              statements: [],
-            })],
-            statements: [],
-          }), null, 'floor'],
-          statements: [],
-        }), 'PLUS', new Script({
-          type: 'number',
-          params: [1],
-          statements: [],
-        })],
-        statements: [],
-      })],
-      statements: [],
-    })]],
-  }), new Script({
-    type: 'hide',
-    params: [null],
-    statements: [],
-  })]],
-  pictures: chunks.map(({ path, name, width, height }) => ({ path, name, width, height })), // Remove the row property
-  sounds: soundPath && soundName ? [{
-    id: generateHash(4),
-    duration,
-    path: soundPath,
-    name: soundName,
-  }] : [],
-})] : chunks.map((chunk, i) => new Object({
-  name: chunk.name,
-  scaleX: 480 * col / chunk.width,
-  scaleY: 270 * (chunk.row - (chunks[i - 1]?.row || 0)) / chunk.height,
-  script: [[new Script({
-    type: 'when_scene_start',
-    params: [null],
-    statements: [],
-  }), new Script({
-    type: 'show',
-    params: [null],
-    statements: [],
-  }), new Script({
-    type: 'repeat_inf',
-    params: [null, null],
-    statements: [[new Script({
-      type: 'set_variable',
-      params: ['yri3', new Script({
-        type: 'calc_operation',
-        params: [null, new Script({
-          type: 'calc_basic',
-          params: [new Script({
-            type: 'calc_basic',
-            params: [new Script({
-              type: 'calc_basic',
-              params: [new Script({
-                type: 'get_project_timer_value',
-                params: [null, null],
-                statements: [],
-              }), 'MINUS', new Script({
-                type: 'number',
-                params: [(chunks[i - 1]?.row || 0) * col * duration / frames],
-                statements: [],
-              })],
-              statements: [],
-            }), 'MULTI', new Script({
-              type: 'get_variable',
-              params: ['qro9', null],
-              statements: [],
-            })],
-            statements: [],
-          }), 'DIVIDE', new Script({
-            type: 'get_variable',
-            params: ['49r4', null],
-            statements: [],
-          })],
-          statements: [],
-        }), null, 'floor'],
-        statements: [],
-      }), null],
-      statements: [],
-    }), new Script({
-      type: 'locate_xy',
-      params: [new Script({
-        type: 'calc_basic',
-        params: [new Script({
-          type: 'number',
-          params: [-480],
-          statements: [],
-        }), 'MULTI', new Script({
-          type: 'quotient_and_mod',
-          params: [null, new Script({
-            type: 'get_variable',
-            params: ['yri3', null],
-            statements: [],
-          }), null, new Script({
-            type: 'get_variable',
-            params: ['voni', null],
-            statements: [],
-          }), null, 'MOD'],
-          statements: [],
-        })],
-        statements: [],
-      }), new Script({
-        type: 'calc_basic',
-        params: [new Script({
-          type: 'number',
-          params: [270],
-          statements: [],
-        }), 'MULTI', new Script({
-          type: 'quotient_and_mod',
-          params: [null, new Script({
-            type: 'get_variable',
-            params: ['yri3', null],
-            statements: [],
-          }), null, new Script({
-            type: 'get_variable',
-            params: ['voni', null],
-            statements: [],
-          }), null, 'QUOTIENT'],
-          statements: [],
-        })],
-        statements: [],
-      }), null],
-      statements: [],
-    })]],
-  })]],
-  pictures: [chunk],
-  sounds: [],
-})).concat([new Object({
-  name,
-  scaleX: 1,
-  scaleY: 1,
-  script: [[new Script({
-    type: 'when_run_button_click',
-    params: [null],
-    statements: [],
-  }), new Script({
-    type: 'start_scene',
-    params: ['7dwq', null],
-    statements: [],
-  })], [new Script({
-    type: 'when_scene_start',
-    params: [null],
-    statements: [],
-    y: 76,
-  }), new Script({
-    type: 'choose_project_timer_action',
-    params: [null, 'START', null, null],
-    statements: [],
-  }), new Script({
-    type: 'sound_something_with_block',
-    params: [new Script({
-      type: 'number',
-      params: [1],
-      statements: [],
-    }), null],
-    statements: [],
-  })]],
-  pictures: [{
-    path: './bower_components/entry-js/images/_1x1.png',
-    name,
-    width: 1,
-    height: 1,
-  }],
-  sounds: soundPath && soundName ? [{
-    id: generateHash(4),
-    duration,
-    path: soundPath,
-    name: soundName,
-  }] : [],
-})])
+interface ProjectInit {
+  name: string
+  width: number
+  height: number
+  chunks: string[]
+  frames: number
+  framerate: number
+  frameHorizontal: number
+  frameVertical: number
+  soundHash?: string
+  soundPath?: string
+  duration: number
+}
 
-export const createProject = ({ name, chunks, soundPath, soundName, col, frames, duration, isOneObject }: ProjectInit) => ({
-  objects: createObject({ name, chunks, soundPath, soundName, col, frames, duration, isOneObject }),
+const createObject = ({ name, width, height, chunks, frames, framerate, frameHorizontal, frameVertical, soundHash, soundPath, duration }: ProjectInit) => [new Object({
+  name,
+  scaleX: 480 / width,
+  scaleY: 270 / height,
+  script: [[
+    new Script('when_run_button_click'),
+    new Script('show'),
+    new Script('choose_project_timer_action', [null, 'START']),
+    new Script('sound_something_with_block', [new Script('number', [1])]),
+    new Script('repeat_inf', [], [[
+      new Script('set_variable', [/* num */'k334', new Script('calc_operation', [null, new Script('calc_basic', [new Script('get_project_timer_value'), 'MULTI', new Script('number', [framerate])]), null, 'floor'])]),
+      new Script('_if', [new Script('boolean_basic_operator', [new Script('get_variable', [/* num */'k334']), 'GREATER', new Script('number', [frames])])], [[
+        new Script('stop_repeat'),
+      ]]),
+      new Script('locate_xy', [new Script('calc_basic', [new Script('number', [-480]), 'MULTI', new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal]), null, 'MOD'])]), new Script('calc_basic', [new Script('number', [270]), 'MULTI', new Script('quotient_and_mod', [null, new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal]), null, 'QUOTIENT']), null, new Script('number', [frameVertical]), null, 'MOD'])])]),
+      new Script('change_to_some_shape', [new Script('calc_basic', [new Script('number', [1]), 'PLUS', new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal * frameVertical]), null, 'QUOTIENT'])])]),
+    ]]),
+    new Script('hide'),
+  ]],
+  pictures: chunks.map(hash => ({
+    name: hash,
+    path: `temp/${hash.substring(0, 2)}/${hash.substring(2, 4)}/image/${hash}.png`,
+    width: width * frameHorizontal,
+    height: height * frameVertical,
+  })),
+  sounds: soundPath && soundHash ? [{
+    id: generateHash(4),
+    name,
+    duration,
+    path: soundPath,
+    hash: soundHash,
+  }]: [],
+})]
+
+const createProject = ({ name, width, height, chunks, frames, framerate, frameHorizontal, frameVertical, soundHash, soundPath, duration }: ProjectInit) => ({
+  name,
+  objects: createObject({ name, width, height, chunks, frames, framerate, frameHorizontal, frameVertical, soundHash, soundPath, duration }),
   scenes: [{
     id: '7dwq',
     name: '장면 1',
   }],
   variables: [{
-    name: 'col',
-    id: 'voni',
-    visible: false,
-    value: col,
-    variableType: 'variable',
-    isCloud: false,
-    isRealTime: false,
-    cloudDate: false,
-    object: null,
-    x: 0,
-    y: 0,
-  }, {
-    name: 'frs',
-    id: 'qro9',
-    visible: false,
-    value: frames,
-    variableType: 'variable',
-    isCloud: false,
-    isRealTime: false,
-    cloudDate: false,
-    object: null,
-    x: 0,
-    y: 0,
-  }, {
     name: 'num',
-    id: 'yri3',
+    id: 'k334',
     visible: false,
     value: 0,
-    variableType: 'variable',
-    isCloud: false,
-    isRealTime: false,
-    cloudDate: false,
-    object: null,
-    x: 0,
-    y: 0,
-  }, {
-    name: 'dur',
-    id: '49r4',
-    visible: false,
-    value: duration,
     variableType: 'variable',
     isCloud: false,
     isRealTime: false,
@@ -469,5 +229,6 @@ export const createProject = ({ name, chunks, soundPath, soundName, col, frames,
   externalModules: [],
   externalModulesLite: [],
   isPracticalCourse: false,
-  name,
 })
+
+export default createProject
