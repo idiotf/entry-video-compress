@@ -147,7 +147,7 @@ const createObject = ({ name, width, height, chunks, frames, framerate, frameHor
     new Script('sound_something_with_block', [new Script('number', [1])]),
     new Script('repeat_inf', [], [[
       new Script('set_variable', [/* num */'k334', new Script('calc_operation', [null, new Script('calc_basic', [new Script('get_project_timer_value'), 'MULTI', new Script('number', [framerate])]), null, 'floor'])]),
-      new Script('_if', [new Script('boolean_basic_operator', [new Script('get_variable', [/* num */'k334']), 'GREATER', new Script('number', [frames])])], [[
+      new Script('_if', [new Script('boolean_basic_operator', [new Script('get_variable', [/* num */'k334']), 'GREATER_OR_EQUAL', new Script('number', [frames])])], [[
         new Script('stop_repeat'),
       ]]),
       new Script('locate_xy', [new Script('calc_basic', [new Script('number', [-480]), 'MULTI', new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal]), null, 'MOD'])]), new Script('calc_basic', [new Script('number', [270]), 'MULTI', new Script('quotient_and_mod', [null, new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal]), null, 'QUOTIENT']), null, new Script('number', [frameVertical]), null, 'MOD'])])]),
@@ -170,7 +170,7 @@ const createObject = ({ name, width, height, chunks, frames, framerate, frameHor
   }]: [],
 })]
 
-const createProject = ({ name, width, height, chunks, frames, framerate, frameHorizontal, frameVertical, soundHash, soundPath, duration }: ProjectInit) => ({
+export const createProject = ({ name, width, height, chunks, frames, framerate, frameHorizontal, frameVertical, soundHash, soundPath, duration }: ProjectInit) => ({
   name,
   objects: createObject({ name, width, height, chunks, frames, framerate, frameHorizontal, frameVertical, soundHash, soundPath, duration }),
   scenes: [{
@@ -231,4 +231,4 @@ const createProject = ({ name, width, height, chunks, frames, framerate, frameHo
   isPracticalCourse: false,
 })
 
-export default createProject
+export { default as defaultProject } from '@/app/project.json'

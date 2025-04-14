@@ -3,16 +3,17 @@ export interface ParentMessages {
     file: File
     width: number
     height: number
+    framerate?: number
     frameHorizontal: number
     frameVertical: number
-    framerate?: number
+    divisionSize?: number
   }
 }
 
 export interface WorkerMessages {
   step: Step
   progress: number
-  done: string
+  file: string
   error: string
 }
 

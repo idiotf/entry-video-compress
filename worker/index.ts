@@ -1,6 +1,6 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg'
 import { ParentTarget } from './target'
-import createProject from './project'
+import { createProject, defaultProject } from './project'
 import generateHash from './hash'
 import Tar from 'tar-js'
 
@@ -8,7 +8,7 @@ import Tar from 'tar-js'
 declare var self: WorkerGlobalScope & typeof globalThis
 
 const target = new ParentTarget(self)
-target.addEventListener('video', async ({ data: { file, width, height, frameHorizontal, frameVertical, framerate } }) => {
+target.addEventListener('video', async ({ data: { file, width, height, frameHorizontal, frameVertical, framerate, divisionSize } }) => {
   const ffmpeg = new FFmpeg
   await ffmpeg.load()
 
@@ -30,7 +30,6 @@ target.addEventListener('video', async ({ data: { file, width, height, frameHori
 
   const soundHash = sound && generateHash()
   const soundPath = soundHash && `temp/${soundHash.substring(0, 2)}/${soundHash.substring(2, 4)}/sound/${soundHash}.mp3`
-  if (soundPath) tar.append(soundPath, sound)
 
   // Extract the frames
   ffmpeg.on('progress', ({ progress }) => target.postMessage('progress', progress))
@@ -65,15 +64,21 @@ target.addEventListener('video', async ({ data: { file, width, height, frameHori
 
     await Promise.all(promises)
     const hash = generateHash()
-    tar.append(`temp/${hash.substring(0, 2)}/${hash.substring(2, 4)}/image/${hash}.png`, new Uint8Array(await (await canvas.convertToBlob()).arrayBuffer()))
+    const data = new Uint8Array(await (await canvas.convertToBlob()).arrayBuffer())
+    if (divisionSize && tar.written + data.length > divisionSize * 1024 * 1024) {
+      target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', encoder.encode(JSON.stringify(defaultProject))) ])))
+      tar.clear()
+    }
+    tar.append(`temp/${hash.substring(0, 2)}/${hash.substring(2, 4)}/image/${hash}.png`, data)
     return hash
   })())
 
   const chunks = await Promise.all(promises)
   ffmpeg.terminate()
 
+  if (soundPath) tar.append(soundPath, sound)
   const frames = frameDir.length
-  const blob = new Blob([ tar.append('temp/project.json', encoder.encode(JSON.stringify(createProject({
+  target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', encoder.encode(JSON.stringify(createProject({
     name: file.name,
     width,
     height,
@@ -85,6 +90,6 @@ target.addEventListener('video', async ({ data: { file, width, height, frameHori
     soundHash,
     soundPath,
     duration,
-  })))) ])
-  target.postMessage('done', URL.createObjectURL(blob))
+  })))) ])))
+  target.postMessage('step', 'done')
 })

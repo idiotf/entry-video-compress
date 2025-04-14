@@ -24,13 +24,14 @@ function NumberInput({ value, setValue, onChange, ...params }: Readonly<React.JS
   )
 }
 
-function DetailNumberInput({ value, setValue, onChange, ...params }: Readonly<React.JSX.IntrinsicElements['input'] & {
+function DetailNumberInput({ value, setValue, onChange, children, ...params }: Readonly<React.JSX.IntrinsicElements['input'] & {
   value?: number
   setValue(value: number): void
 }>) {
   return (
     <dd className='mb-1'>
       <input {...params} value={value == null || value != value ? '' : value} type='number' onChange={e => (setValue(+(e.target.value || NaN)), onChange?.(e))} className='inline-block w-12 bg-amber-500 p-0.5 rounded-sm' />
+      {children}
     </dd>
   )
 }
@@ -58,6 +59,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
   const [ framerate, setFramerate ] = useState<number>()
   const [ frameHorizontal, setFrameHorizontal ] = useState(5)
   const [ frameVertical, setFrameVertical ] = useState(5)
+  const [ divisionSize, setDivisionSize ] = useState<number>()
 
   const [ videoURL, setVideoURL ] = useState<string>()
   const [ progress, setProgress ] = useState(0)
@@ -89,14 +91,19 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
     const target = new WorkerTarget(new Worker(new URL('@/worker', import.meta.url)))
     const anchor = document.createElement('a')
 
-    target.addEventListener('step', ({ data }) => setStep(data))
+    target.addEventListener('step', ({ data }) => {
+      setStep(data)
+      if (data == 'done') {
+        cancelAnimationFrame(raf)
+        setExtractDuration(0)
+      }
+    })
     target.addEventListener('progress', ({ data }) => setProgress(data))
-    target.addEventListener('done', async ({ data }) => {
+    target.addEventListener('file', async ({ data }) => {
+      if (anchor.href) URL.revokeObjectURL(anchor.href)
       anchor.href = data
       anchor.download = file.name.replace(/(\.[^.]*)?$/, '.ent')
       anchor.click()
-      cancelAnimationFrame(raf)
-      setStep('done')
     })
 
     target.addEventListener('error', ({ data }) => (setStep('error'), setExtractError(data)))
@@ -106,8 +113,10 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
       file,
       width,
       height,
+      framerate,
       frameHorizontal,
       frameVertical,
+      divisionSize,
     })
 
     let raf = requestAnimationFrame(function frame(time) {
@@ -142,7 +151,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
           className='rounded-xl w-full h-full'
           ref={videoRef}
         />
-        <div hidden={!videoError} className='absolute inset-0 leading-[100%]'>{`${(progress * 100).toFixed(3)}%`}</div>
+        <div hidden={!videoError} className='absolute inset-0 flex justify-center items-center'>{`${(progress * 100).toFixed(3)}%`}</div>
       </div>
       <div className='p-2 w-[calc(100%-var(--spacing)*8-160px)] text-ellipsis whitespace-nowrap overflow-hidden'>{file.name}</div>
       <button onClick={() => setCheckAbort(!checkAbort)} className='absolute clear-both w-8 h-8 right-0 top-1 cursor-pointer rounded-full before:absolute before:inset-0 before:duration-250 before:scale-0 before:rounded-full before:bg-gray-500 hover:before:scale-100 before:opacity-25'>
@@ -155,11 +164,6 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
       </div>
       {step == 'config' ? <>
         <form action={() => (setStartTime(performance.now()), setStep('extract'))} className='w-[calc(100%-var(--spacing)*8-160px)] float-left p-2'>
-          <button type='submit' className='absolute clear-both w-8 h-8 right-0 top-10 cursor-pointer rounded-full before:absolute before:inset-0 before:duration-250 before:scale-0 before:rounded-full before:bg-gray-500 hover:before:scale-100 before:opacity-25'>
-            <svg xmlns='http://www.w3.org/2000/svg' viewBox='-16 -16 32 32' className='relative'>
-              <path d='M-10,0l8,10l12-20' fill='none' stroke='var(--color-green-700)' />
-            </svg>
-          </button>
           <NumberInput id={`width-${progressKey}`} value={width} setValue={setWidth} min={1} step={1} placeholder='너비' required />
           <label htmlFor={`width-${progressKey}`}>×</label>
           <NumberInput id={`height-${progressKey}`} value={height} setValue={setHeight} min={1} step={1} placeholder='높이' required />
@@ -167,6 +171,11 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
           <NumberInput id={`framerate-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} step={Number.MIN_VALUE} placeholder='자동' />
           <label htmlFor={`framerate-${progressKey}`}> FPS</label>
           <button type='button' onClick={showModal} className='ml-2 bg-amber-500 p-0.5 rounded-sm cursor-pointer'>기타 설정</button>
+          <button type='submit' className='absolute clear-both w-8 h-8 right-0 top-10 cursor-pointer rounded-full before:absolute before:inset-0 before:duration-250 before:scale-0 before:rounded-full before:bg-gray-500 hover:before:scale-100 before:opacity-25'>
+            <svg xmlns='http://www.w3.org/2000/svg' viewBox='-16 -16 32 32' className='relative'>
+              <path d='M-10,0l8,10l12-20' fill='none' stroke='var(--color-green-700)' />
+            </svg>
+          </button>
         </form>
         <dialog id={`options-${progressKey}`} className='m-auto w-full max-w-96 h-72 rounded-2xl'>
           <h3 className='text-center mt-4 text-3xl'>설정</h3>
@@ -181,6 +190,10 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             <DetailNumberInput id={`frame-horizontal-${progressKey}`} value={frameHorizontal} setValue={setFrameHorizontal} min={1} step={1} placeholder='정수' required />
             <Label htmlFor={`frame-vertical-${progressKey}`}>모양 당 프레임 세로</Label>
             <DetailNumberInput id={`frame-vertical-${progressKey}`} value={frameVertical} setValue={setFrameVertical} min={1} step={1} placeholder='정수' required />
+            <Label htmlFor={`division-size-${progressKey}`}>분할 내보내기 용량</Label>
+            <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={1} step={1} placeholder='없음' required>
+              <label htmlFor={`division-size-${progressKey}`}>MiB</label>
+            </DetailNumberInput>
           </dl>
           <form method='dialog'>
             <button className='absolute w-8 h-8 right-2 top-2 cursor-pointer rounded-full before:absolute before:inset-0 before:duration-250 before:scale-0 before:rounded-full before:bg-gray-500 hover:before:scale-100 before:opacity-25'>
