@@ -168,7 +168,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
           <label htmlFor={`width-${progressKey}`}>×</label>
           <NumberInput id={`height-${progressKey}`} value={height} setValue={setHeight} min={1} step={1} placeholder='높이' required />
           <div className='inline-block pl-2' />
-          <NumberInput id={`framerate-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} step={Number.MIN_VALUE} placeholder='자동' />
+          <NumberInput id={`framerate-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} step='any' placeholder='자동' />
           <label htmlFor={`framerate-${progressKey}`}> FPS</label>
           <button type='button' onClick={showModal} className='ml-2 bg-amber-500 p-0.5 rounded-sm cursor-pointer'>기타 설정</button>
           <button type='submit' className='absolute clear-both w-8 h-8 right-0 top-10 cursor-pointer rounded-full before:absolute before:inset-0 before:duration-250 before:scale-0 before:rounded-full before:bg-gray-500 hover:before:scale-100 before:opacity-25'>
@@ -185,13 +185,13 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             <Label htmlFor={`height-detail-${progressKey}`}>동영상 높이</Label>
             <DetailNumberInput id={`height-detail-${progressKey}`} value={height} setValue={setHeight} min={1} step={1} placeholder='높이' required />
             <Label htmlFor={`framerate-detail-${progressKey}`}>동영상 FPS</Label>
-            <DetailNumberInput id={`framerate-detail-${progressKey}`} value={framerate} setValue={setFramerate} min={1} step={1} placeholder='자동' required />
+            <DetailNumberInput id={`framerate-detail-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} placeholder='자동' required />
             <Label htmlFor={`frame-horizontal-${progressKey}`}>모양 당 프레임 가로</Label>
             <DetailNumberInput id={`frame-horizontal-${progressKey}`} value={frameHorizontal} setValue={setFrameHorizontal} min={1} step={1} placeholder='정수' required />
             <Label htmlFor={`frame-vertical-${progressKey}`}>모양 당 프레임 세로</Label>
             <DetailNumberInput id={`frame-vertical-${progressKey}`} value={frameVertical} setValue={setFrameVertical} min={1} step={1} placeholder='정수' required />
             <Label htmlFor={`division-size-${progressKey}`}>분할 내보내기 용량</Label>
-            <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={1} step={1} placeholder='없음' required>
+            <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={0} step='any' placeholder='없음' required>
               <label htmlFor={`division-size-${progressKey}`}>MiB</label>
             </DetailNumberInput>
           </dl>
@@ -216,7 +216,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
 }
 
 export default function Button() {
-  const [ dropping, /*setDropping*/ ] = useState(false)
+  const [ dropping, setDropping ] = useState(false)
   const [ progresses, dispatch ] = useReducer<File[], [ProgressAction]>((state, { type, file }) => {
     switch (type) {
       case 'add': return [...state, file]
@@ -232,7 +232,11 @@ export default function Button() {
     for (const file of files) dispatch({ type: 'add', file })
   }
 
-  function dropHandler({ dataTransfer: { files } }: React.DragEvent<HTMLButtonElement>) {
+  function dropHandler(event: React.DragEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    setDropping(false)
+
+    const { dataTransfer: { files } } = event
     if (!files) return
     for (const file of files) dispatch({ type: 'add', file })
   }
@@ -241,6 +245,8 @@ export default function Button() {
     <div className='max-w-[512px] mx-auto'>
       <button
         onClick={() => inputRef.current?.click()}
+        onDragLeave={() => setDropping(false)}
+        onDragOver={event => (event.preventDefault(), setDropping(true))}
         onDrop={dropHandler}
         className={`block w-full cursor-pointer select-none bg-green-400 dark:bg-green-500 hover:brightness-90 dark:hover:brightness-75 border-4 border-green-500 dark:border-green-800 rounded-3xl p-4 ${dropping ? 'brightness-90 dark:brightness-75' : ''}`}
       >
