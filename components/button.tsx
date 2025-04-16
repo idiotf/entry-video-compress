@@ -185,7 +185,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             <Label htmlFor={`height-detail-${progressKey}`}>동영상 높이</Label>
             <DetailNumberInput id={`height-detail-${progressKey}`} value={height} setValue={setHeight} min={1} step={1} placeholder='높이' required />
             <Label htmlFor={`framerate-detail-${progressKey}`}>동영상 FPS</Label>
-            <DetailNumberInput id={`framerate-detail-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} placeholder='자동' />
+            <DetailNumberInput id={`framerate-detail-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} step='any' placeholder='자동' />
             <Label htmlFor={`frame-horizontal-${progressKey}`}>모양 당 프레임 가로</Label>
             <DetailNumberInput id={`frame-horizontal-${progressKey}`} value={frameHorizontal} setValue={setFrameHorizontal} min={1} step={1} placeholder='정수' required />
             <Label htmlFor={`frame-vertical-${progressKey}`}>모양 당 프레임 세로</Label>
