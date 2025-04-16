@@ -185,13 +185,13 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             <Label htmlFor={`height-detail-${progressKey}`}>동영상 높이</Label>
             <DetailNumberInput id={`height-detail-${progressKey}`} value={height} setValue={setHeight} min={1} step={1} placeholder='높이' required />
             <Label htmlFor={`framerate-detail-${progressKey}`}>동영상 FPS</Label>
-            <DetailNumberInput id={`framerate-detail-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} placeholder='자동' required />
+            <DetailNumberInput id={`framerate-detail-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} placeholder='자동' />
             <Label htmlFor={`frame-horizontal-${progressKey}`}>모양 당 프레임 가로</Label>
             <DetailNumberInput id={`frame-horizontal-${progressKey}`} value={frameHorizontal} setValue={setFrameHorizontal} min={1} step={1} placeholder='정수' required />
             <Label htmlFor={`frame-vertical-${progressKey}`}>모양 당 프레임 세로</Label>
             <DetailNumberInput id={`frame-vertical-${progressKey}`} value={frameVertical} setValue={setFrameVertical} min={1} step={1} placeholder='정수' required />
             <Label htmlFor={`division-size-${progressKey}`}>분할 내보내기 용량</Label>
-            <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={0} step='any' placeholder='없음' required>
+            <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={0} step='any' placeholder='없음'>
               <label htmlFor={`division-size-${progressKey}`}>MiB</label>
             </DetailNumberInput>
           </dl>
