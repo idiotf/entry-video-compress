@@ -15,6 +15,8 @@ class Object {
   constructor({
     name,
     script,
+    width,
+    height,
     scaleX,
     scaleY,
     selectedPicture = 0,
@@ -23,6 +25,8 @@ class Object {
   }: {
     name: string
     script: Script[][]
+    width: number
+    height: number
     scaleX: number
     scaleY: number
     selectedPicture?: number
@@ -51,8 +55,8 @@ class Object {
       scaleY,
       rotation: 0,
       direction: 90,
-      width: pictures[0].width,
-      height: pictures[0].height,
+      width,
+      height,
       font: 'undefinedpx ',
       visible: false,
     }
@@ -138,6 +142,8 @@ interface ProjectInit {
 
 const createObject = ({ name, width, height, chunks, frames, framerate, frameHorizontal, frameVertical, soundHash, soundPath, duration }: ProjectInit) => [new Object({
   name,
+  width: width * frameHorizontal,
+  height: height * frameVertical,
   scaleX: 480 / width,
   scaleY: 270 / height,
   script: [[
