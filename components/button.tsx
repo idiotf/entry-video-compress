@@ -1,19 +1,19 @@
 'use client'
 
-import { WorkerTarget, Step } from '@/worker/target'
+import { WorkerTarget, type Step } from '@/worker/target'
 import { useEffect, useReducer, useRef, useState } from 'react'
 
-type ProgressAction = AddAction | DeleteAction
-
-interface AddAction {
-  type: 'add'
+interface ProgressAction {
+  type: 'add' | 'delete'
   file: File
 }
 
-interface DeleteAction {
-  type: 'delete'
-  file: File
-}
+// const timeFormat = (time: number) => `${time < 3600 ? '' : `${Math.trunc(time / 3600).toString().padStart(2, '0')}:`}${Math.trunc(time % 3600 / 60).toString().padStart(2, '0')}:${Math.trunc(time % 60).toString().padStart(2, '0')}`
+const timeFormat = (second: number) => [
+  second >= 3600 ? second / 3600 : [], // Hours
+  second % 3600 / 60,                  // Minutes
+  second % 60,                         // Seconds
+].flat().map(v => (~~v + '').padStart(2, '0')).join(':')
 
 function NumberInput({ value, setValue, onChange, ...params }: Readonly<React.JSX.IntrinsicElements['input'] & {
   value?: number
@@ -79,10 +79,14 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
     if (video && video.duration) video.currentTime = progress * video.duration
   }, [ progress ])
 
-  useEffect(() => setVideoURL(videoURL => {
-    if (videoURL) URL.revokeObjectURL(videoURL)
-    return URL.createObjectURL(file)
-  }), [ file ])
+  useEffect(() => {
+    const url = URL.createObjectURL(file)
+    setVideoURL(videoURL => {
+      if (videoURL) URL.revokeObjectURL(videoURL)
+      return url
+    })
+    return () => URL.revokeObjectURL(url)
+  }, [ file ])
 
   const isConfiguration = step == 'config'
   useEffect(() => {
@@ -116,7 +120,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
       framerate,
       frameHorizontal,
       frameVertical,
-      divisionSize,
+      divisionSize: divisionSize && divisionSize * 1024 * 1024,
     })
 
     let raf = requestAnimationFrame(function frame(time) {
@@ -137,8 +141,6 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
     const dialog = document.getElementById(`options-${progressKey}`)
     if (dialog instanceof HTMLDialogElement) dialog.showModal()
   }
-
-  const timeFormat = (time: number) => `${time < 3600 ? '' : `${Math.trunc(time / 3600).toString().padStart(2, '0')}:`}${Math.trunc(time % 3600 / 60).toString().padStart(2, '0')}:${Math.trunc(time % 60).toString().padStart(2, '0')}`
 
   return (
     <div className='relative min-h-[90px]'>

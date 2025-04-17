@@ -36,6 +36,10 @@ progress::-webkit-progress-value {
   transition: 0.5s linear;
 }
 
+progress[data-step=error]::-webkit-progress-value {
+  background-color: var(--color-red-400);
+}
+
 progress::-moz-progress-bar {
   border-radius: calc(var(--spacing)*1);
 }
