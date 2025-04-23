@@ -32,7 +32,7 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
   const sound = typeof soundFile == 'string' ? encoder.encode(soundFile) : soundFile
 
   const soundHash = sound && generateHash()
-  const soundPath = soundHash && `temp/${soundHash.substring(0, 2)}/${soundHash.substring(2, 4)}/sound/${soundHash}.mp3`
+  const soundPath = soundHash && `temp/${soundHash.substring(0, 2)}/${soundHash.substring(2, 4)}/${soundHash}.mp3`
   if (soundPath) tar.append(soundPath, sound)
 
   // Extract the frames
