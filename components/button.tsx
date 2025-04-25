@@ -193,7 +193,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             <Label htmlFor={`frame-vertical-${progressKey}`}>모양 당 프레임 세로</Label>
             <DetailNumberInput id={`frame-vertical-${progressKey}`} value={frameVertical} setValue={setFrameVertical} min={1} step={1} placeholder='정수' required />
             <Label htmlFor={`division-size-${progressKey}`}>분할 내보내기 용량</Label>
-            <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={0} step='any' placeholder='없음'>
+            <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={Number.MIN_VALUE} step='any' placeholder='없음'>
               <label htmlFor={`division-size-${progressKey}`}>MiB</label>
             </DetailNumberInput>
           </dl>
