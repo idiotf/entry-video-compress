@@ -179,7 +179,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             </svg>
           </button>
         </form>
-        <dialog id={`options-${progressKey}`} className='m-auto w-full max-w-96 h-72 rounded-2xl'>
+        <dialog id={`options-${progressKey}`} className='m-auto w-96 h-72 rounded-2xl'>
           <h3 className='text-center mt-4 text-3xl'>설정</h3>
           <dl className='p-4'>
             <Label htmlFor={`width-detail-${progressKey}`}>동영상 너비</Label>
