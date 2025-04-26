@@ -218,16 +218,20 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
 }
 
 export default function Button() {
-  const [ dropping, setDropping ] = useState(false)
-  const [ progresses, dispatch ] = useReducer<File[], [ProgressAction]>((state, { type, file }) => {
-    switch (type) {
-      case 'add': return [...state, file]
-      case 'delete': return state.filter(prevFile => prevFile != file)
-    }
-  }, [])
   const countRef = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const fileMapRef = useRef(new WeakMap<File, React.Key>)
+
+  const [ dropping, setDropping ] = useState(false)
+  const [ progresses, dispatch ] = useReducer<File[], [ProgressAction]>((state, { type, file }) => {
+    switch (type) {
+      case 'add':
+        return [...state, file]
+      case 'delete':
+        fileMapRef.current.delete(file)
+        return state.filter(prevFile => prevFile != file)
+    }
+  }, [])
 
   function fileAddHandler({ target: { files } }: React.ChangeEvent<HTMLInputElement>) {
     if (!files) return
