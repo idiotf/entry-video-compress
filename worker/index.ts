@@ -77,12 +77,10 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
 
   const promises = []
   if (memorySaving) {
-    console.log(1)
     const canvas = new OffscreenCanvas(width * frameHorizontal, height * frameVertical)
     const context = canvas.getContext('2d')!
     while (i < frameDir.length) {
       promises.push(await joinFrames(canvas, context))
-      console.log(`${i}/${frameDir.length}`)
       context.clearRect(0, 0, canvas.width, canvas.height)
     }
   } else while (i < frameDir.length) {
