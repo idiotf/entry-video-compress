@@ -7,6 +7,7 @@ export interface ParentMessages {
     frameHorizontal: number
     frameVertical: number
     divisionSize?: number
+    memorySaving: boolean
   }
 }
 
@@ -14,7 +15,7 @@ export interface WorkerMessages {
   step: Step
   progress: number
   file: string
-  error: string
+  error: string | null
 }
 
 export type Step = 'config' | 'extract' | 'generating' | 'done' | 'error'

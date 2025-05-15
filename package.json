@@ -11,22 +11,22 @@
   "dependencies": {
     "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
-    "next": "^15.3.0",
+    "next": "^15.3.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tar-js": "^0.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@tailwindcss/postcss": "^4.1.4",
-    "@types/node": "^22.14.1",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
+    "@tailwindcss/postcss": "^4.1.6",
+    "@types/node": "^22.15.18",
+    "@types/react": "^19.1.4",
+    "@types/react-dom": "^19.1.5",
     "@types/tar-js": "^0.3.5",
-    "eslint": "^9.24.0",
-    "eslint-config-next": "^15.3.0",
+    "eslint": "^9.26.0",
+    "eslint-config-next": "^15.3.2",
     "postcss": "^8.5.3",
-    "tailwindcss": "^4.1.4",
+    "tailwindcss": "^4.1.6",
     "typescript": "^5.8.3"
   }
 }

@@ -30,7 +30,7 @@ function DetailNumberInput({ value, setValue, onChange, children, ...params }: R
 }>) {
   return (
     <dd className='mb-1'>
-      <input {...params} value={value == null || value != value ? '' : value} type='number' onChange={e => (setValue(+(e.target.value || NaN)), onChange?.(e))} className='inline-block w-12 bg-amber-500 p-0.5 rounded-sm' />
+      <NumberInput {...params} value={value} setValue={setValue} onChange={onChange} />
       {children}
     </dd>
   )
@@ -60,6 +60,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
   const [ frameHorizontal, setFrameHorizontal ] = useState(5)
   const [ frameVertical, setFrameVertical ] = useState(5)
   const [ divisionSize, setDivisionSize ] = useState<number>()
+  const [ memorySaving, setMemorySaving ] = useState(false)
 
   const [ videoURL, setVideoURL ] = useState<string>()
   const [ progress, setProgress ] = useState(0)
@@ -110,8 +111,15 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
       anchor.click()
     })
 
-    target.addEventListener('error', ({ data }) => (setStep('error'), setExtractError(data)))
-    target.worker.addEventListener('error', () => (setStep('error'), setExtractError('변환에 실패했습니다.')))
+    const errorMessage = '변환에 실패했습니다.'
+    target.addEventListener('error', ({ data }) => {
+      setStep('error')
+      setExtractError(data || errorMessage)
+    })
+    target.worker.addEventListener('error', () => {
+      setStep('error')
+      setExtractError(errorMessage)
+    })
 
     target.postMessage('video', {
       file,
@@ -121,6 +129,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
       frameHorizontal,
       frameVertical,
       divisionSize: divisionSize && divisionSize * 1024 * 1024,
+      memorySaving,
     })
 
     let raf = requestAnimationFrame(function frame(time) {
@@ -179,7 +188,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             </svg>
           </button>
         </form>
-        <dialog id={`options-${progressKey}`} className='m-auto w-96 h-72 rounded-2xl'>
+        <dialog id={`options-${progressKey}`} className='m-auto w-96 h-80 rounded-2xl'>
           <h3 className='text-center mt-4 text-3xl'>설정</h3>
           <dl className='p-4'>
             <Label htmlFor={`width-detail-${progressKey}`}>동영상 너비</Label>
@@ -196,6 +205,10 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={Number.MIN_VALUE} step='any' placeholder='없음'>
               <label htmlFor={`division-size-${progressKey}`}>MiB</label>
             </DetailNumberInput>
+            <Label htmlFor={`memory-saving-${progressKey}`}>메모리 절약 내보내기</Label>
+            <dd className='mb-1'>
+              <input type='checkbox' id={`memory-saving-${progressKey}`} checked={memorySaving} onChange={({ target: { checked } }) => setMemorySaving(checked)} className='w-4 h-4 align-sub' />
+            </dd>
           </dl>
           <form method='dialog'>
             <button className='absolute w-8 h-8 right-2 top-2 cursor-pointer rounded-full before:absolute before:inset-0 before:duration-250 before:scale-0 before:rounded-full before:bg-gray-500 hover:before:scale-100 before:opacity-25'>

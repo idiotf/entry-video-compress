@@ -8,9 +8,12 @@ import Tar from 'tar-js'
 declare var self: WorkerGlobalScope & typeof globalThis
 
 const target = new ParentTarget(self)
-target.addEventListener('video', data => (async ({ data: { file, width, height, frameHorizontal, frameVertical, framerate, divisionSize } }) => {
+target.addEventListener('video', data => (async ({ data: { file, width, height, frameHorizontal, frameVertical, framerate, divisionSize, memorySaving } }) => {
   // Read video file
-  const data = await file.arrayBuffer().catch(() => target.postMessage('error', '파일을 읽지 못했습니다.'))
+  const data = await file.arrayBuffer().catch(reason => {
+    target.postMessage('error', '파일을 읽지 못했습니다.')
+    throw reason
+  })
   if (!data) return
 
   // Load ffmpeg and write video file
@@ -51,12 +54,8 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
   target.postMessage('step', 'generating')
 
   // Join the frames
-  const promises: Promise<string>[] = []
-  for (let i = 0; i < frameDir.length; ) promises.push((async () => {
-    // Create a canvas to merge frames
-    const canvas = new OffscreenCanvas(width * frameHorizontal, height * frameVertical)
-    const context = canvas.getContext('2d')!
-
+  let i = 0
+  async function joinFrames(canvas: OffscreenCanvas, context: OffscreenCanvasRenderingContext2D) {
     const promises: Promise<void>[] = []
     for (let vertical = 0; vertical < frameVertical; vertical++) for (let horizontal = 0; horizontal < frameHorizontal; horizontal++) promises.push((async () => {
       const frame = await frameDir[i++]
@@ -74,7 +73,23 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
     }
     tar.append(`temp/${hash.substring(0, 2)}/${hash.substring(2, 4)}/image/${hash}.png`, data)
     return hash
-  })())
+  }
+
+  const promises = []
+  if (memorySaving) {
+    console.log(1)
+    const canvas = new OffscreenCanvas(width * frameHorizontal, height * frameVertical)
+    const context = canvas.getContext('2d')!
+    while (i < frameDir.length) {
+      promises.push(await joinFrames(canvas, context))
+      console.log(`${i}/${frameDir.length}`)
+      context.clearRect(0, 0, canvas.width, canvas.height)
+    }
+  } else while (i < frameDir.length) {
+    const canvas = new OffscreenCanvas(width * frameHorizontal, height * frameVertical)
+    const context = canvas.getContext('2d')!
+    promises.push(joinFrames(canvas, context))
+  }
 
   const json = encoder.encode(JSON.stringify(createProject({
     name: file.name,
@@ -98,4 +113,7 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
   target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', json) ])))
   target.postMessage('step', 'done')
   target.postMessage('progress', 1)
-})(data).catch((reason: unknown) => (target.postMessage('error', '변환에 실패했습니다.'), Promise.reject(reason))))
+})(data).catch(reason => {
+  target.postMessage('error', null)
+  throw reason
+}))
