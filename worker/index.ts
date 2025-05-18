@@ -61,7 +61,9 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
       const frame = await frameDir[i++]
       if (!frame) return
       const blob = new Blob([ frame ])
-      context.drawImage(await createImageBitmap(blob), horizontal * width, vertical * height)
+      const bitmap = await createImageBitmap(blob)
+      context.drawImage(bitmap, horizontal * width, vertical * height)
+      bitmap.close()
     })())
 
     await Promise.all(promises)
