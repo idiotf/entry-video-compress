@@ -26,18 +26,19 @@ progress[data-step=error]::-webkit-progress-bar {
   background-color: var(--color-red-400);
 }
 
-progress[data-step=done]::-webkit-progress-value {
-  background-color: var(--color-green-400);
-}
-
 progress::-webkit-progress-value {
   border-radius: calc(var(--spacing)*1);
   background-color: var(--color-blue-500);
   transition: 0.5s linear;
 }
 
+progress[data-step=done]::-webkit-progress-value {
+  background-color: var(--color-green-400);
+}
+
 progress[data-step=error]::-webkit-progress-value {
   background-color: var(--color-red-400);
+  transition: none;
 }
 
 progress::-moz-progress-bar {
