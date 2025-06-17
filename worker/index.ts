@@ -49,6 +49,11 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
   ])
   const frameDir = (await ffmpeg.listDir('f')).filter(file => !file.isDir).map(file => ffmpeg.readFile(`f/${file.name}`))
   const frames = frameDir.length
+  if (!frames) {
+    target.postMessage('error', '프레임을 추출하지 못했습니다.')
+    return
+  }
+
   Promise.all(frameDir).then(() => ffmpeg.terminate())
 
   target.postMessage('step', 'generating')
@@ -81,11 +86,11 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
   if (memorySaving) {
     const canvas = new OffscreenCanvas(width * frameHorizontal, height * frameVertical)
     const context = canvas.getContext('2d')!
-    while (i < frameDir.length) {
+    while (i < frames) {
       promises.push(await joinFrames(canvas, context))
       context.clearRect(0, 0, canvas.width, canvas.height)
     }
-  } else while (i < frameDir.length) {
+  } else while (i < frames) {
     const canvas = new OffscreenCanvas(width * frameHorizontal, height * frameVertical)
     const context = canvas.getContext('2d')!
     promises.push(joinFrames(canvas, context))
