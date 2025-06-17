@@ -77,7 +77,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
 
   useEffect(() => {
     const video = videoRef.current
-    if (video && video.duration) video.currentTime = progress * video.duration
+    if (video && Number.isFinite(video.duration)) video.currentTime = progress * video.duration
   }, [ progress ])
 
   useEffect(() => {
@@ -103,7 +103,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
         setExtractDuration(0)
       }
     })
-    target.addEventListener('progress', ({ data }) => setProgress(data))
+    target.addEventListener('progress', ({ data }) => setProgress(Math.max(data, 0)))
     target.addEventListener('file', async ({ data }) => {
       if (anchor.href) URL.revokeObjectURL(anchor.href)
       anchor.href = data
