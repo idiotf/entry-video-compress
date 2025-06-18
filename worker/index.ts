@@ -14,7 +14,6 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
     target.postMessage('error', '파일을 읽지 못했습니다.')
     throw reason
   })
-  if (!data) return
 
   // Load ffmpeg and write video file
   const ffmpeg = new FFmpeg
