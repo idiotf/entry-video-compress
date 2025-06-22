@@ -26,12 +26,16 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
   // Get duration of video
   const parse = (data: FileData) => parseFloat(typeof data == 'object' ? new TextDecoder().decode(data) : data)
   await ffmpeg.ffprobe(['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', file.name, '-o', 'd.txt'])
-  const duration = parse(await ffmpeg.readFile('d.txt'))
+  const videoDuration = parse(await ffmpeg.readFile('d.txt'))
+
+  if (!videoDuration) framerate = 62.5
+  await ffmpeg.deleteFile('d.txt').catch(() => {})
 
   // Extract the sound
   const soundCode = await ffmpeg.exec(['-i', file.name, 's.mp3'])
   const soundFile = soundCode ? void 0 : await ffmpeg.readFile('s.mp3')
   const sound = typeof soundFile == 'string' ? encoder.encode(soundFile) : soundFile
+  await ffmpeg.deleteFile('s.mp3').catch(() => {})
 
   const soundHash = sound && generateHash()
   const soundPath = soundHash && `temp/${soundHash.substring(0, 2)}/${soundHash.substring(2, 4)}/${soundHash}.mp3`
@@ -46,6 +50,7 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
     ...(framerate ? ['-r', framerate + ''] : []),
     'f/%d.png',
   ])
+
   const frameDir = (await ffmpeg.listDir('f')).filter(file => !file.isDir).map(file => ffmpeg.readFile(`f/${file.name}`))
   const frames = frameDir.length
   if (!frames) {
@@ -53,6 +58,7 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
     return
   }
 
+  const duration = videoDuration || frames * 62.5
   Promise.all(frameDir).then(() => ffmpeg.terminate())
 
   target.postMessage('step', 'generating')

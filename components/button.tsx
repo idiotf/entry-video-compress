@@ -137,7 +137,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
     let raf = requestAnimationFrame(function frame(time) {
       time -= startTime
       setExtractTime(time / 1000)
-      setProgress(progress => (setExtractDuration(progress > 0 ? (time / progress - time) / 1000 : 0), progress))
+      setProgress(progress => (setExtractDuration(progress > 0 ? (time / Math.min(progress, 1) - time) / 1000 : 0), progress))
       raf = requestAnimationFrame(frame)
     })
 
