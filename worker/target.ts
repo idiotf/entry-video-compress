@@ -4,11 +4,16 @@ export interface ParentMessages {
     width: number
     height: number
     framerate?: number
+    boostMode: boolean
     frameHorizontal: number
     frameVertical: number
     divisionSize?: number
     memorySaving: boolean
+    multiThread: boolean
   }
+  fallbackFrame: [ number, ImageBitmap ]
+  fallbackDone: unknown
+  fallbackError: unknown
 }
 
 export interface WorkerMessages {
@@ -16,6 +21,10 @@ export interface WorkerMessages {
   progress: number
   file: string
   error: string | null
+  extractFrameFallback: {
+    framerate: number
+    duration: number
+  }
 }
 
 export type Step = 'config' | 'extract' | 'generating' | 'done' | 'error'

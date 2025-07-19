@@ -9,24 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ffmpeg/core": "^0.12.10",
     "@ffmpeg/ffmpeg": "^0.12.15",
-    "next": "^15.3.4",
+    "@ffmpeg/util": "^0.12.2",
+    "next": "^15.4.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tar-js": "^0.3.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@tailwindcss/postcss": "^4.1.10",
-    "@types/node": "^22.15.32",
+    "@tailwindcss/postcss": "^4.1.11",
+    "@types/node": "^22.16.5",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@types/tar-js": "^0.3.5",
-    "eslint": "^9.29.0",
-    "eslint-config-next": "^15.3.4",
+    "eslint": "^9.31.0",
+    "eslint-config-next": "^15.4.2",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.10",
+    "tailwindcss": "^4.1.11",
     "typescript": "^5.8.3"
   }
 }

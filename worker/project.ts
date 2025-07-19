@@ -156,8 +156,12 @@ const createObject = ({ name, width, height, chunks, frames, framerate, frameHor
       new Script('_if', [new Script('boolean_basic_operator', [new Script('get_variable', [/* num */'k334']), 'GREATER_OR_EQUAL', new Script('number', [frames])])], [[
         new Script('stop_repeat'),
       ]]),
-      new Script('locate_xy', [new Script('calc_basic', [new Script('number', [-480]), 'MULTI', new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal]), null, 'MOD'])]), new Script('calc_basic', [new Script('number', [270]), 'MULTI', new Script('quotient_and_mod', [null, new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal]), null, 'QUOTIENT']), null, new Script('number', [frameVertical]), null, 'MOD'])])]),
-      new Script('change_to_some_shape', [new Script('calc_basic', [new Script('number', [1]), 'PLUS', new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal * frameVertical]), null, 'QUOTIENT'])])]),
+      ...(frameHorizontal == 1 && frameVertical == 1 ? [
+        new Script('change_to_some_shape', [new Script('calc_basic', [new Script('number', [1]), 'PLUS', new Script('get_variable', [/* num */'k334'])])]),
+      ] : [
+        new Script('locate_xy', [new Script('calc_basic', [new Script('number', [-480]), 'MULTI', new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal]), null, 'MOD'])]), new Script('calc_basic', [new Script('number', [270]), 'MULTI', new Script('quotient_and_mod', [null, new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal]), null, 'QUOTIENT']), null, new Script('number', [frameVertical]), null, 'MOD'])])]),
+        new Script('change_to_some_shape', [new Script('calc_basic', [new Script('number', [1]), 'PLUS', new Script('quotient_and_mod', [null, new Script('get_variable', [/* num */'k334']), null, new Script('number', [frameHorizontal * frameVertical]), null, 'QUOTIENT'])])]),
+      ]),
     ]]),
     new Script('hide'),
   ]],

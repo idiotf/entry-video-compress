@@ -17,14 +17,11 @@
   }
 }
 
-progress::-webkit-progress-bar {
+progress, progress::-webkit-progress-bar {
   border-radius: calc(var(--spacing)*1);
   background-color: var(--color-neutral-300);
 }
 
-progress[data-step=error]::-webkit-progress-bar {
-  background-color: var(--color-red-400);
-}
 
 progress::-webkit-progress-value {
   border-radius: calc(var(--spacing)*1);
@@ -32,17 +29,35 @@ progress::-webkit-progress-value {
   transition: 0.5s linear;
 }
 
+progress::-moz-progress-bar {
+  border-radius: calc(var(--spacing)*1);
+  background-color: var(--color-blue-500);
+  transition: 0.5s linear;
+}
+
+
 progress[data-step=done]::-webkit-progress-value {
   background-color: var(--color-green-400);
 }
+
+progress[data-step=done]::-moz-progress-bar {
+  background-color: var(--color-green-400);
+}
+
 
 progress[data-step=error]::-webkit-progress-value {
   background-color: var(--color-red-400);
   transition: none;
 }
 
-progress::-moz-progress-bar {
-  border-radius: calc(var(--spacing)*1);
+progress[data-step=error]::-moz-progress-bar {
+  background-color: var(--color-red-400);
+  transition: none;
+}
+
+
+progress[data-step=error], progress[data-step=error]::-webkit-progress-bar {
+  background-color: var(--color-red-400);
 }
 
 input::-webkit-outer-spin-button,

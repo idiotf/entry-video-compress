@@ -1,7 +1,7 @@
 'use client'
 
 import { WorkerTarget, type Step } from '@/worker/target'
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 
 interface ProgressAction {
   type: 'add' | 'delete'
@@ -57,15 +57,18 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
   const [ width, setWidth ] = useState(640)
   const [ height, setHeight ] = useState(360)
   const [ framerate, setFramerate ] = useState<number>()
+  const [ boostMode, setBoostMode ] = useState(false)
   const [ frameHorizontal, setFrameHorizontal ] = useState(5)
   const [ frameVertical, setFrameVertical ] = useState(5)
   const [ divisionSize, setDivisionSize ] = useState<number>()
   const [ memorySaving, setMemorySaving ] = useState(false)
+  const [ multiThread, setMultiThread ] = useState(true)
 
   const [ videoURL, setVideoURL ] = useState<string>()
   const [ progress, setProgress ] = useState(0)
   const [ checkAbort, setCheckAbort ] = useState(false)
   const [ videoError, setVideoError ] = useState(false)
+  const [ extractFrameFallback, setExtractFrameFallback ] = useState(false)
 
   const [ startTime, setStartTime ] = useState(0)
   const [ extractTime, setExtractTime ] = useState(0)
@@ -76,11 +79,12 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
   const workerRef = useRef<WorkerTarget>(null)
 
   useEffect(() => {
+    if (extractFrameFallback) return
     const video = videoRef.current
     if (!video) return
     if (progress < 0) video.currentTime = progress / -1_000_000
     else if (Number.isFinite(video.duration)) video.currentTime = progress * video.duration
-  }, [ progress ])
+  }, [ progress, extractFrameFallback ])
 
   useEffect(() => {
     const url = URL.createObjectURL(file)
@@ -117,21 +121,50 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
     target.addEventListener('error', ({ data }) => {
       setStep('error')
       setExtractError(data || errorMessage)
-    })
+    }, { once: true })
     target.worker.addEventListener('error', () => {
       setStep('error')
       setExtractError(errorMessage)
-    })
+    }, { once: true })
 
     target.postMessage('video', {
       file,
       width,
       height,
       framerate,
+      boostMode,
       frameHorizontal,
       frameVertical,
       divisionSize: divisionSize && divisionSize * 1024 * 1024,
       memorySaving,
+      multiThread,
+    })
+
+    let stopped = false
+    target.addEventListener('extractFrameFallback', async ({ data: { framerate, duration } }) => {
+      if (!videoRef.current || videoError) return target.postMessage('fallbackError', 0)
+      setExtractFrameFallback(true)
+
+      const canvas = new OffscreenCanvas(width, height)
+      const context = canvas.getContext('2d')
+      if (!context) return target.postMessage('fallbackError', 0)
+
+      const video = videoRef.current
+      const frameLength = framerate * duration
+      for (let i = 0; i < frameLength; ++i) {
+        if (stopped) return
+
+        video.currentTime = i / framerate
+        await new Promise(resolve => video.addEventListener('seeked', resolve, { once: true }))
+
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        context.drawImage(video, 0, 0, width, height)
+
+        const bitmap = await createImageBitmap(canvas)
+        target.postMessage('fallbackFrame', [ i, bitmap ], [ bitmap ])
+        setProgress(i / framerate / duration)
+      }
+      target.postMessage('fallbackDone', 0)
     })
 
     let raf = requestAnimationFrame(function frame(time) {
@@ -142,16 +175,17 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
     })
 
     return () => {
+      stopped = true
       URL.revokeObjectURL(anchor.href)
       target.worker.terminate()
       cancelAnimationFrame(raf)
     }
   }, [ isConfiguration, extractError ]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function showModal() {
+  const showModal = useCallback(() => {
     const dialog = document.getElementById(`options-${progressKey}`)
     if (dialog instanceof HTMLDialogElement) dialog.showModal()
-  }
+  }, [ progressKey ])
 
   return (
     <div className='relative min-h-[90px]'>
@@ -167,7 +201,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
         <div hidden={!videoError} className='absolute inset-0 flex justify-center items-center'>{`${(progress * 100).toFixed(3)}%`}</div>
       </div>
       <div className='p-2 w-[calc(100%-var(--spacing)*8-160px)] text-ellipsis whitespace-nowrap overflow-hidden'>{file.name}</div>
-      <button onClick={() => setCheckAbort(!checkAbort)} className='absolute clear-both w-8 h-8 right-0 top-1 cursor-pointer rounded-full before:absolute before:inset-0 before:duration-250 before:scale-0 before:rounded-full before:bg-gray-500 hover:before:scale-100 before:opacity-25'>
+      <button onClick={() => setCheckAbort(!checkAbort)} aria-label='중지하기' className='absolute clear-both w-8 h-8 right-0 top-1 cursor-pointer rounded-full before:absolute before:inset-0 before:duration-250 before:scale-0 before:rounded-full before:bg-gray-500 hover:before:scale-100 before:opacity-25'>
         <svg xmlns='http://www.w3.org/2000/svg' viewBox='-16 -16 32 32' className='relative'>
           <path d='M-10-10l20,20m0-20l-20,20' fill='none' stroke='#111' />
         </svg>
@@ -190,26 +224,42 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
             </svg>
           </button>
         </form>
-        <dialog id={`options-${progressKey}`} className='m-auto w-96 h-80 rounded-2xl'>
+        <dialog id={`options-${progressKey}`} className='m-auto w-96 h-96 rounded-2xl'>
           <h3 className='text-center mt-4 text-3xl'>설정</h3>
           <dl className='p-4'>
             <Label htmlFor={`width-detail-${progressKey}`}>동영상 너비</Label>
             <DetailNumberInput id={`width-detail-${progressKey}`} value={width} setValue={setWidth} min={1} step={1} placeholder='너비' required />
+
             <Label htmlFor={`height-detail-${progressKey}`}>동영상 높이</Label>
             <DetailNumberInput id={`height-detail-${progressKey}`} value={height} setValue={setHeight} min={1} step={1} placeholder='높이' required />
+
             <Label htmlFor={`framerate-detail-${progressKey}`}>동영상 FPS</Label>
             <DetailNumberInput id={`framerate-detail-${progressKey}`} value={framerate} setValue={setFramerate} min={Number.MIN_VALUE} step='any' placeholder='자동' />
+
+            <Label htmlFor={`support-boostmode-${progressKey}`}>부스트모드 지원</Label>
+            <dd className='mb-1'>
+              <input type='checkbox' id={`support-boostmode-${progressKey}`} checked={boostMode} onChange={({ target: { checked } }) => setBoostMode(checked)} className='w-4 h-4 align-sub' />
+            </dd>
+
             <Label htmlFor={`frame-horizontal-${progressKey}`}>모양 당 프레임 가로</Label>
             <DetailNumberInput id={`frame-horizontal-${progressKey}`} value={frameHorizontal} setValue={setFrameHorizontal} min={1} step={1} placeholder='정수' required />
+
             <Label htmlFor={`frame-vertical-${progressKey}`}>모양 당 프레임 세로</Label>
             <DetailNumberInput id={`frame-vertical-${progressKey}`} value={frameVertical} setValue={setFrameVertical} min={1} step={1} placeholder='정수' required />
+
             <Label htmlFor={`division-size-${progressKey}`}>분할 내보내기 용량</Label>
             <DetailNumberInput id={`division-size-${progressKey}`} value={divisionSize} setValue={setDivisionSize} min={Number.MIN_VALUE} step='any' placeholder='없음'>
               <label htmlFor={`division-size-${progressKey}`}>MiB</label>
             </DetailNumberInput>
+
             <Label htmlFor={`memory-saving-${progressKey}`}>메모리 절약 내보내기</Label>
             <dd className='mb-1'>
               <input type='checkbox' id={`memory-saving-${progressKey}`} checked={memorySaving} onChange={({ target: { checked } }) => setMemorySaving(checked)} className='w-4 h-4 align-sub' />
+            </dd>
+
+            <Label htmlFor={`multi-thread-${progressKey}`}>멀티 스레드 사용</Label>
+            <dd className='mb-1'>
+              <input type='checkbox' id={`multi-thread-${progressKey}`} checked={multiThread} onChange={({ target: { checked } }) => setMultiThread(checked)} className='w-4 h-4 align-sub' />
             </dd>
           </dl>
           <form method='dialog'>
