@@ -11,9 +11,15 @@ const target = new ParentTarget(self)
 target.addEventListener('video', data => (async ({ data: { file, width, height, frameHorizontal, frameVertical, framerate, divisionSize, memorySaving } }) => {
   // Read video file
   const data = await file.arrayBuffer().catch(reason => {
-    target.postMessage('error', '파일을 읽지 못했습니다.')
-    throw reason
+    target.postMessage('error', {
+      type: 'reading-file',
+      message: '파일을 읽지 못했습니다.',
+    })
+
+    console.error(reason)
+    return null
   })
+  if (!data) return
 
   // Load ffmpeg and write video file
   const ffmpeg = new FFmpeg
@@ -54,7 +60,11 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
   const frameDir = (await ffmpeg.listDir('f')).filter(file => !file.isDir).map(file => ffmpeg.readFile(`f/${file.name}`))
   const frames = frameDir.length
   if (!frames) {
-    target.postMessage('error', '프레임을 추출하지 못했습니다.')
+    target.postMessage('error', {
+      type: 'extracting-frames',
+      message: '프레임을 추출하지 못했습니다.',
+    })
+
     return
   }
 
@@ -70,7 +80,7 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
     for (let vertical = 0; vertical < frameVertical; vertical++) for (let horizontal = 0; horizontal < frameHorizontal; horizontal++) promises.push((async () => {
       const frame = await frameDir[i++]
       if (!frame) return
-      const blob = new Blob([ frame ])
+      const blob = new Blob([ frame as BlobPart ])
       const bitmap = await createImageBitmap(blob)
       context.drawImage(bitmap, horizontal * width, vertical * height)
       bitmap.close()
@@ -80,7 +90,7 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
     const hash = generateHash()
     const data = new Uint8Array(await (await canvas.convertToBlob()).arrayBuffer())
     if (divisionSize && tar.written + data.length > divisionSize) {
-      target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', encoder.encode(JSON.stringify(defaultProject))) ])))
+      target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', encoder.encode(JSON.stringify(defaultProject))) as BlobPart ])))
       tar.clear()
     }
     tar.append(`temp/${hash.substring(0, 2)}/${hash.substring(2, 4)}/image/${hash}.png`, data)
@@ -116,14 +126,17 @@ target.addEventListener('video', data => (async ({ data: { file, width, height, 
   })))
 
   if (divisionSize && tar.written + json.length > divisionSize) {
-    target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', encoder.encode(JSON.stringify(defaultProject))) ])))
+    target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', encoder.encode(JSON.stringify(defaultProject))) as BlobPart ])))
     tar.clear()
   }
 
-  target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', json) ])))
+  target.postMessage('file', URL.createObjectURL(new Blob([ tar.append('temp/project.json', json) as BlobPart ])))
   target.postMessage('step', 'done')
   target.postMessage('progress', 1)
-})(data).catch(reason => {
-  target.postMessage('error', null)
+})(data).catch((reason: unknown) => {
+  target.postMessage('error', {
+    type: 'unknown',
+  })
+
   throw reason
 }))

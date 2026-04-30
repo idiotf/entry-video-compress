@@ -15,7 +15,12 @@ export interface WorkerMessages {
   step: Step
   progress: number
   file: string
-  error: string | null
+  error: ErrorData
+}
+
+export interface ErrorData {
+  type: string
+  message?: string
 }
 
 export type Step = 'config' | 'extract' | 'generating' | 'done' | 'error'

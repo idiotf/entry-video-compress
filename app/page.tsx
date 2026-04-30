@@ -1,8 +1,9 @@
+import Link from 'next/link'
 import Button from '@/components/button'
 
 export default function Home() {
   return (
-    <div className='text-center'>
+    <main className='text-center'>
       <h1 className='my-8 text-4xl min-[550px]:text-5xl font-semibold text-black dark:text-white'>Entry Video Compress</h1>
       <p>비디오 파일을 엔트리 작품 파일로 변환하는 효율적인 방법</p>
       <hr className='mx-5 my-10 border-gray-200 dark:border-gray-800' />
@@ -10,6 +11,9 @@ export default function Home() {
       <div className='mx-4'>
         <Button />
       </div>
-    </div>
+      <Link href='/help' target='_blank' className='inline-block text-blue-500 mt-4'>
+        {' '}ⓘ 도움말
+      </Link>
+    </main>
   )
 }

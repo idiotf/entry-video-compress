@@ -7,7 +7,10 @@ const notoSansKR = Noto_Sans_KR({
 })
 
 export const metadata: Metadata = {
-  title: 'Entry Video Compress',
+  title: {
+    default: 'Entry Video Compress',
+    template: '%s | Entry Video Compress',
+  },
   description: '동영상 파일을 엔트리 작품 파일로 변환하기',
 }
 

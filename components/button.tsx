@@ -1,6 +1,7 @@
 'use client'
 
-import { WorkerTarget, type Step } from '@/worker/target'
+import { type ErrorData, WorkerTarget, type Step } from '@/worker/target'
+import Link from 'next/link'
 import { useEffect, useReducer, useRef, useState } from 'react'
 
 interface ProgressAction {
@@ -8,7 +9,6 @@ interface ProgressAction {
   file: File
 }
 
-// const timeFormat = (time: number) => `${time < 3600 ? '' : `${Math.trunc(time / 3600).toString().padStart(2, '0')}:`}${Math.trunc(time % 3600 / 60).toString().padStart(2, '0')}:${Math.trunc(time % 60).toString().padStart(2, '0')}`
 const timeFormat = (second: number) => [
   second >= 3600 ? second / 3600 : [], // Hours
   second % 3600 / 60,                  // Minutes
@@ -47,8 +47,10 @@ function Label({ children, htmlFor }: Readonly<{
   )
 }
 
+const defaultErrorMessage = '변환에 실패했습니다.'
+
 function Progress({ progressKey, file, onDeleted }: Readonly<{
-  progressKey: React.Key
+  progressKey: number
   file: File
   onDeleted(): void
 }>) {
@@ -70,7 +72,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
   const [ startTime, setStartTime ] = useState(0)
   const [ extractTime, setExtractTime ] = useState(0)
   const [ extractDuration, setExtractDuration ] = useState(0)
-  const [ extractError, setExtractError ] = useState<string>()
+  const [ extractError, setExtractError ] = useState<ErrorData>()
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const workerRef = useRef<WorkerTarget>(null)
@@ -113,14 +115,15 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
       anchor.click()
     })
 
-    const errorMessage = '변환에 실패했습니다.'
     target.addEventListener('error', ({ data }) => {
       setStep('error')
-      setExtractError(data || errorMessage)
+      setExtractError(data)
     })
     target.worker.addEventListener('error', () => {
       setStep('error')
-      setExtractError(errorMessage)
+      setExtractError({
+        type: 'unknown',
+      })
     })
 
     target.postMessage('video', {
@@ -154,8 +157,8 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
   }
 
   return (
-    <div className='relative min-h-[90px]'>
-      <div className='float-left relative w-[160px] h-[90px]'>
+    <div className='relative min-h-22.5'>
+      <div className='float-left relative w-40 h-22.5'>
         <video
           src={videoURL}
           hidden={videoError}
@@ -223,7 +226,14 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
       </> : <>
         <div className='float-left relative mx-2 w-[calc(100%-var(--spacing)*4-160px)] h-8 rounded-sm bg-neutral-300'>
           <progress data-step={step} className='block absolute w-full h-full inset-0 rounded-sm bg-neutral-300' value={progress} />
-          <div className='block absolute w-full h-full inset-0 leading-[calc(var(--spacing)*8)] px-1'>{extractError}</div>
+          <div className='block absolute w-full h-full inset-0 leading-8 px-1'>
+            {extractError && (extractError.message || defaultErrorMessage)}
+            {extractError && (
+              <Link href={`/help#${extractError.type}`} target='_blank' className='text-blue-800'>
+                {' '}ⓘ 도움말
+              </Link>
+            )}
+          </div>
         </div>
         <time className='absolute left-40 top-18 px-2 text-sm'>{timeFormat(extractTime)}</time>
         <time className='absolute right-0 top-18 px-2 text-sm'>{timeFormat(extractDuration)}</time>
@@ -235,7 +245,7 @@ function Progress({ progressKey, file, onDeleted }: Readonly<{
 export default function Button() {
   const countRef = useRef(0)
   const inputRef = useRef<HTMLInputElement>(null)
-  const fileMapRef = useRef(new WeakMap<File, React.Key>)
+  const fileMapRef = useRef(new WeakMap<File, number>)
 
   const [ dropping, setDropping ] = useState(false)
   const [ progresses, dispatch ] = useReducer<File[], [ProgressAction]>((state, { type, file }) => {
@@ -263,7 +273,7 @@ export default function Button() {
   }
 
   return (
-    <div className='max-w-[512px] mx-auto'>
+    <div className='max-w-lg mx-auto'>
       <button
         onClick={() => inputRef.current?.click()}
         onDragLeave={() => setDropping(false)}
@@ -280,18 +290,18 @@ export default function Button() {
           (Powered By FFmpeg)
         </span>
       </button>
-      {progresses.length ? (
+      {progresses.length > 0 && (
         <ul className='mt-2 bg-yellow-400 p-2 border-4 rounded-3xl border-yellow-600'>{progresses.map((file, i) => (key => (
           <li
             key={key}
             className='text-black text-left'
           >
-            {i ? <hr className='m-4 dark:border-gray-800 clear-both' /> : void 0}
+            {i > 0 && <hr className='m-4 dark:border-gray-800 clear-both' />}
             <Progress file={file} progressKey={key} onDeleted={() => dispatch({ type: 'delete', file })} />
           </li>
         ))(fileMapRef.current.get(file) || (key => (fileMapRef.current.set(file, key), key))(++countRef.current)))}
         </ul>
-      ) : void 0}
+      )}
     </div>
   )
 }
